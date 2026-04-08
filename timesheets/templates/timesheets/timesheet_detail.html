@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Feuille de temps{% endblock %}
+
+{% block content %}
+<style>
+    .page {
+        max-width: 1300px;
+        margin: auto;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .info {
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #777;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background: #e5e5e5;
+        font-weight: bold;
+    }
+
+    td {
+        background: #f0f0f0;
+    }
+
+    .day {
+        font-weight: bold;
+        background: #f5f5f5;
+    }
+
+    .total {
+        font-weight: bold;
+    }
+
+    input[type="time"] {
+        width: 100px;
+    }
+
+    input[type="text"] {
+        width: 160px;
+    }
+
+    .leave-row input[type="time"] {
+        background: #ddd;
+    }
+
+    .errors {
+        color: red;
+        text-align: left;
+        font-size: 13px;
+    }
+
+    .summary {
+        margin-top: 40px;
+        width: 460px;
+    }
+
+    .summary td {
+        text-align: left;
+        background: #f7f7f7;
+    }
+
+    .summary td:last-child {
+        text-align: right;
+        font-weight: bold;
+    }
+
+    .actions {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    button {
+        padding: 8px 16px;
+        font-size: 15px;
+    }
+
+    .submitted-message {
+        margin-top: 15px;
+        padding: 10px;
+        border: 1px solid #777;
+        background: #f7f7f7;
+    }
+</style>
+
+<div class="page">
+
+    <h1>Feuille de temps</h1>
+
+    <div class="info">
+        <strong>Employé :</strong> {{ timesheet.employee.full_name }}<br>
+        <strong>Semaine du :</strong> {{ timesheet.week_start }}<br>
+        <strong>Statut :</strong> {{ timesheet.get_status_display }}
+    </div>
+
+    {% if timesheet.status == "draft" %}
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Jour</th>
+                    <th>Congé</th>
+                    <th>Arrivée</th>
+                    <th>Départ dîner</th>
+                    <th>Retour</th>
+                    <th>Départ</th>
+                    <th>Soir Arrivée</th>
+                    <th>Soir Départ</th>
+                    <th>Note</th>
+                    <th>Total</th>
+                    <th>Erreurs</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for form in formset %}
+                <tr class="timesheet-row">
+                    {{ form.id }}
+                    {{ form.day }}
+                    {{ form.entry_type }}
+
+                    <td class="day">{{ form.instance.get_day_display }}</td>
+                    <td>{{ form.is_leave }}</td>
+                    <td>{{ form.morning_in }}</td>
+                    <td>{{ form.lunch_out }}</td>
+                    <td>{{ form.lunch_in }}</td>
+                    <td>{{ form.day_shift_out }}</td>
+                    <td>{{ form.evening_shift_in }}</td>
+                    <td>{{ form.evening_shift_out }}</td>
+                    <td>{{ form.note }}</td>
+                    <td class="total">{{ form.instance.total_hours }}</td>
+                    <td class="errors">{{ form.errors }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="actions">
+            <button type="submit">Sauvegarder</button>
+        </div>
+    </form>
+
+    <form method="post" action="{% url 'submit_timesheet' timesheet.id %}">
+        {% csrf_token %}
+        <div class="actions">
+            <button type="submit">Soumettre la feuille</button>
+        </div>
+    </form>
+
+    {% else %}
+    <div class="submitted-message">
+        Cette feuille a été soumise et ne peut plus être modifiée.
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Jour</th>
+                <th>Congé</th>
+                <th>Arrivée</th>
+                <th>Départ dîner</th>
+                <th>Retour</th>
+                <th>Départ</th>
+                <th>Soir Arrivée</th>
+                <th>Soir Départ</th>
+                <th>Note</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for form in formset %}
+            <tr class="timesheet-row">
+                <td class="day">{{ form.instance.get_day_display }}</td>
+                <td>{% if form.instance.entry_type != "work" %}Oui{% else %}Non{% endif %}</td>
+                <td>{{ form.instance.morning_in|default:"" }}</td>
+                <td>{{ form.instance.lunch_out|default:"" }}</td>
+                <td>{{ form.instance.lunch_in|default:"" }}</td>
+                <td>{{ form.instance.day_shift_out|default:"" }}</td>
+                <td>{{ form.instance.evening_shift_in|default:"" }}</td>
+                <td>{{ form.instance.evening_shift_out|default:"" }}</td>
+                <td>{{ form.instance.note }}</td>
+                <td class="total">{{ form.instance.total_hours }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <table class="summary">
+        <tr>
+            <td>Heures standard</td>
+            <td>{{ timesheet.standard_hours }}</td>
+        </tr>
+        <tr>
+            <td>Vacances gagnées (semaine)</td>
+            <td>{{ timesheet.vacation_hours_earned }}</td>
+        </tr>
+        <tr>
+            <td>Vacances accumulées</td>
+            <td>{{ timesheet.employee.calculated_vacation_balance }}</td>
+        </tr>
+        <tr>
+            <td>Banque précédente</td>
+            <td>{{ timesheet.previous_approved_bank_balance }}</td>
+        </tr>
+        <tr>
+            <td>Banque totale accumulée</td>
+            <td>{{ timesheet.employee.calculated_banked_hours_balance }}</td>
+        </tr>
+        <tr>
+            <td>Heures travaillées</td>
+            <td>{{ timesheet.total_hours }}</td>
+        </tr>
+        <tr>
+            <td>Heures manquantes</td>
+            <td>{{ timesheet.missing_hours }}</td>
+        </tr>
+        <tr>
+            <td>Banque utilisée</td>
+            <td>{{ timesheet.bank_hours_used }}</td>
+        </tr>
+        <tr>
+            <td>Heures ajoutées banque</td>
+            <td>{{ timesheet.bank_hours_added }}</td>
+        </tr>
+        <tr>
+            <td>Banque finale</td>
+            <td>{{ timesheet.ending_bank_hours }}</td>
+        </tr>
+        <tr>
+            <td>Heures payables</td>
+            <td>{{ timesheet.payable_hours }}</td>
+        </tr>
+    </table>
+
+</div>
+
+<script>
+    function updateRowState(row) {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        const inputs = row.querySelectorAll('input[type="time"]');
+
+        if (!checkbox) return;
+
+        if (checkbox.checked) {
+            row.classList.add("leave-row");
+            inputs.forEach(i => {
+                i.disabled = true;
+                i.value = "";
+            });
+        } else {
+            row.classList.remove("leave-row");
+            inputs.forEach(i => i.disabled = false);
+        }
+    }
+
+    document.querySelectorAll(".timesheet-row").forEach(row => {
+        const checkbox = row.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            updateRowState(row);
+            checkbox.addEventListener("change", () => updateRowState(row));
+        }
+    });
+</script>
+{% endblock %}

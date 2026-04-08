@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Mes feuilles de temps{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-page {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .top-actions {
+        margin: 20px 0;
+    }
+
+    .top-actions a {
+        display: inline-block;
+        padding: 8px 14px;
+        border: 1px solid #777;
+        background: #efefef;
+        text-decoration: none;
+        color: #000;
+        font-weight: bold;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #777;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background: #e5e5e5;
+    }
+
+    td {
+        background: #f0f0f0;
+    }
+
+    .empty-box {
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #777;
+        background: #f7f7f7;
+    }
+</style>
+
+<div class="dashboard-page">
+    <h1>Mes feuilles de temps</h1>
+
+    <p><strong>Employé :</strong> {{ employee.full_name }}</p>
+
+    <div class="top-actions">
+        <a href="{% url 'current_timesheet' %}">Ouvrir la feuille de cette semaine</a>
+    </div>
+
+    {% if timesheets %}
+    <table>
+        <thead>
+            <tr>
+                <th>Semaine du</th>
+                <th>Statut</th>
+                <th>Heures</th>
+                <th>Heures payables</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in timesheets %}
+            <tr>
+                <td>{{ t.week_start }}</td>
+                <td>{{ t.get_status_display }}</td>
+                <td>{{ t.total_hours }}</td>
+                <td>{{ t.payable_hours }}</td>
+                <td>
+                    <a href="{% url 'timesheet_detail' t.id %}">Ouvrir</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-box">
+        Aucune feuille de temps pour le moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

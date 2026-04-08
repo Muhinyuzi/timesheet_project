@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80vh;
+    }
+
+    .login-box {
+        background: white;
+        padding: 25px;
+        border: 1px solid #ccc;
+        width: 320px;
+    }
+
+    .login-box h2 {
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .login-box input {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+    }
+
+    .login-box button {
+        width: 100%;
+        padding: 10px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .errors {
+        color: red;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="login-container">
+    <form method="post" class="login-box">
+        {% csrf_token %}
+
+        <h2>Connexion</h2>
+
+        {% if form.errors %}
+            <div class="errors">
+                Nom d'utilisateur ou mot de passe incorrect
+            </div>
+        {% endif %}
+
+        <label>Nom d'utilisateur</label>
+        {{ form.username }}
+
+        <label>Mot de passe</label>
+        {{ form.password }}
+
+        <button type="submit">Se connecter</button>
+    </form>
+</div>
+{% endblock %}

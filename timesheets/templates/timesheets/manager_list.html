@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Feuilles soumises{% endblock %}
+
+{% block content %}
+<style>
+    .manager-page {
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    th, td {
+        border: 1px solid #777;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background: #e5e5e5;
+        font-weight: bold;
+    }
+
+    td {
+        background: #f0f0f0;
+    }
+
+    .actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .inline-form {
+        display: inline;
+        margin: 0;
+    }
+
+    button {
+        padding: 6px 12px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    .empty-message {
+        padding: 12px;
+        border: 1px solid #777;
+        background: #f7f7f7;
+    }
+</style>
+
+<div class="manager-page">
+    <h1>Feuilles soumises</h1>
+
+    {% if timesheets %}
+    <table>
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Semaine</th>
+                <th>Heures</th>
+                <th>Heures payables</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for t in timesheets %}
+            <tr>
+                <td>{{ t.employee.full_name }}</td>
+                <td>{{ t.week_start }}</td>
+                <td>{{ t.total_hours }}</td>
+                <td>{{ t.payable_hours }}</td>
+                <td>{{ t.get_status_display }}</td>
+                <td>
+                    <div class="actions">
+                        <a href="{% url 'timesheet_detail' t.id %}">Voir</a>
+
+                        <form method="post" action="{% url 'approve_timesheet' t.id %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit">Approuver</button>
+                        </form>
+
+                        <form method="post" action="{% url 'reject_timesheet' t.id %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit">Refuser</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-message">
+        Aucune feuille soumise pour le moment.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
